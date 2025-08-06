@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zitouna-app
+  namespace: zitouna-devops
+  labels:
+    app: zitouna-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zitouna-app
+  template:
+    metadata:
+      labels:
+        app: zitouna-app
+    spec:
+      containers:
+        - name: zitouna-container
+          image: image-registry.openshift-image-registry.svc:5000/zitouna-devops/zitouna-devops-git:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: JAVA_APP_JAR
+              value: "target/helloworld-0.0.1-SNAPSHOT.jar"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zitouna-app
+  namespace: zitouna-devops
+  labels:
+    app: zitouna-app
+spec:
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: zitouna-app
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: zitouna-app
+  namespace: zitouna-devops
+spec:
+  to:
+    kind: Service
+    name: zitouna-app
+  port:
+    targetPort: 8081
+  tls:
+    termination: edge
+  wildcardPolicy: None
